@@ -122,11 +122,12 @@ M.path = (function()
   end
 
   local function is_fs_root(path)
-    if is_windows then
-      return path:match '^%a:$'
-    else
-      return path == '/'
-    end
+    -- if is_windows then
+    --   return path:match '^%a:$'
+    -- else
+    --   return path == '/'
+    -- end
+    return path == vim.fn.fnamemodify(path, ':h')
   end
 
   local function is_absolute(filename)
@@ -138,20 +139,22 @@ M.path = (function()
   end
 
   local function dirname(path)
-    local strip_dir_pat = '/([^/]+)$'
-    local strip_sep_pat = '/$'
-    if not path or #path == 0 then
-      return
-    end
-    local result = path:gsub(strip_sep_pat, ''):gsub(strip_dir_pat, '')
-    if #result == 0 then
-      if is_windows then
-        return path:sub(1, 2):upper()
-      else
-        return '/'
-      end
-    end
-    return result
+    -- local strip_dir_pat = '/([^/]+)$'
+    -- local strip_sep_pat = '/$'
+    -- if not path or #path == 0 then
+    --   return
+    -- end
+    -- local result = path:gsub(strip_sep_pat, ''):gsub(strip_dir_pat, '')
+    -- if #result == 0 then
+    --   if is_windows then
+    --     return path:sub(1, 2):upper()
+    --   else
+    --     return '/'
+    --   end
+    -- end
+    -- return result
+    path = vim.fn.fnamemodify(path, ':h')
+    return path
   end
 
   local function path_join(...)
@@ -160,7 +163,8 @@ M.path = (function()
 
   -- Traverse the path calling cb along the way.
   local function traverse_parents(path, cb)
-    path = uv.fs_realpath(path)
+    -- path = uv.fs_realpath(path)
+    path = vim.fn.fnamemodify(path, ':p')
     local dir = path
     -- Just in case our algo is buggy, don't infinite loop.
     for _ = 1, 100 do
@@ -186,7 +190,8 @@ M.path = (function()
       else
         return
       end
-      if v and uv.fs_realpath(v) then
+      -- if v and uv.fs_realpath(v) then
+      if v and vim.fn.fnamemodify(v, ':p') then
         return v, path
       else
         return
@@ -320,7 +325,8 @@ function M.server_per_root_dir_manager(make_config)
 
       -- Launch the server in the root directory used internally by lspconfig, if otherwise unset
       -- also check that the path exist
-      if not new_config.cmd_cwd and uv.fs_realpath(root_dir) then
+      -- if not new_config.cmd_cwd and uv.fs_realpath(root_dir) then
+      if not new_config.cmd_cwd and vim.fn.fnamemodify(root_dir, ':p') then
         new_config.cmd_cwd = root_dir
       end
 
@@ -589,3 +595,4 @@ function M.strip_archive_subpath(path)
 end
 
 return M
+
